@@ -14,11 +14,12 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
       - run: npm ci
-      - run: npm publish --userconfig ./.npmrc
-        id: publish
-        working-directory: ./test/test-package
+      - run: npm set //registry.npmjs.org/:_authToken $NPM_TOKEN
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN}}
+      - run: npm publish
+        id: publish
+        working-directory: ./test/test-package
       - uses: ./
         with:
           package: await-npm-package-version-action-test

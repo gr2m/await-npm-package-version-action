@@ -21,7 +21,7 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - uses gr2m/await-npm-package-version-action@v1
+      - uses: gr2m/await-npm-package-version-action@v1
       - with:
           package: example
           version: ${{ github.event.release.tag_name }} # v1.2.3 is automatically parsed as "1.2.3"

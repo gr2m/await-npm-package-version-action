@@ -1,0 +1,18 @@
+name: Await npm package version
+description: "Wait for an npm package version to become available"
+branding:
+  icon: "clock"
+  color: purple
+inputs:
+  package:
+    description: "Name of the npm package"
+    required: true
+  private_key:
+    description: "Version of the package"
+    required: true
+  timeout:
+    description: "Timeout in seconds"
+    required: false
+runs:
+  using: "node12"
+  main: "dist/index.js"

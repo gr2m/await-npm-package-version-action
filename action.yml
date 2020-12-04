@@ -1,17 +1,17 @@
 name: Await npm package version
 description: "Wait for an npm package version to become available"
 branding:
-  icon: "rss"
+  icon: "clock"
   color: purple
 inputs:
-  app_id:
-    description: "Your GitHub App's App ID"
+  package:
+    description: "Name of the npm package"
     required: true
   private_key:
-    description: "Your GitHub Private Key"
+    description: "Version of the package"
     required: true
-  dispatch_event_type:
-    description: "The name of the repository dispatch event, see https://git.io/JTpRo. Defaults to '[owner]/[repo] release', e.g. 'gr2m/await-npm-package-version-action release'"
+  timeout:
+    description: "Timeout in seconds"
     required: false
 runs:
   using: "node12"

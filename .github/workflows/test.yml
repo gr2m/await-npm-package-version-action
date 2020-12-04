@@ -1,0 +1,26 @@
+on: [push]
+name: Test
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: npm ci
+      - run: npm test
+  readmeExample:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: npm ci
+      - run: npm publish
+        id: publish
+        working-directory: ./test/test-package
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN}}
+      - uses: ./
+        with:
+          package: await-npm-package-version-action-test
+          version: ${{ steps.publish.outputs.version }}
+      - run: npm info await-npm-package-version-action-test

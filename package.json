@@ -16,7 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.6",
-    "got": "^11.8.0"
+    "got": "^11.8.1"
   },
   "release": {
     "branches": [

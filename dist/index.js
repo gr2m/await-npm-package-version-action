@@ -1,61 +1,5 @@
-module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ 2932:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const { inspect } = __nccwpck_require__(1669);
-
-const core = __nccwpck_require__(2186);
-const got = __nccwpck_require__(3061);
-
-const TIMEOUT_DEFAULT = 300;
-
-main();
-
-async function main() {
-  try {
-    const package = core.getInput("package");
-    const version = core.getInput("version").replace(/^v/, "");
-    const timeout = core.getInput("timeout") | TIMEOUT_DEFAULT;
-    const endtime = Date.now() + timeout * 1000;
-
-    core.info(`waiting for ${version} of ${package} `);
-
-    let hasVersion;
-    let etag;
-    do {
-      const { body, headers } = await got(
-        `https://registry.npmjs.org/${package.replace(/\//, "%2f")}`,
-        {
-          headers: {
-            "if-none-match": `"${etag}"`,
-          },
-          responseType: "json",
-        }
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      if (Date.now() > endtime) {
-        core.setFailed(`Timeout (${timeout}s)`);
-      }
-
-      process.stdout.write(".");
-      hasVersion = version in body.versions;
-      etag = headers.etag;
-    } while (!hasVersion);
-
-    core.info(` ${version} found for ${package} in npm registry`);
-  } catch (error) {
-    core.debug(inspect(error, { depth: Infinity }));
-    core.setFailed(error.message);
-  }
-}
-
-
-/***/ }),
 
 /***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
@@ -253,6 +197,7 @@ exports.getInput = getInput;
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function setOutput(name, value) {
+    process.stdout.write(os.EOL);
     command_1.issueCommand('set-output', { name }, value);
 }
 exports.setOutput = setOutput;
@@ -8267,8 +8212,9 @@ module.exports = require("zlib");;
 /******/ 	// The require function
 /******/ 	function __nccwpck_require__(moduleId) {
 /******/ 		// Check if module is in cache
-/******/ 		if(__webpack_module_cache__[moduleId]) {
-/******/ 			return __webpack_module_cache__[moduleId].exports;
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
@@ -8293,10 +8239,61 @@ module.exports = require("zlib");;
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
-/******/ 	__nccwpck_require__.ab = __dirname + "/";/************************************************************************/
-/******/ 	// module exports must be returned from runtime so entry inlining is disabled
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	return __nccwpck_require__(2932);
+/******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";/************************************************************************/
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+(() => {
+const { inspect } = __nccwpck_require__(1669);
+
+const core = __nccwpck_require__(2186);
+const got = __nccwpck_require__(3061);
+
+const TIMEOUT_DEFAULT = 300;
+
+main();
+
+async function main() {
+  try {
+    const package = core.getInput("package");
+    const version = core.getInput("version").replace(/^v/, "");
+    const timeout = core.getInput("timeout") | TIMEOUT_DEFAULT;
+    const endtime = Date.now() + timeout * 1000;
+
+    core.info(`waiting for ${version} of ${package} `);
+
+    let hasVersion;
+    let etag;
+    do {
+      const { body, headers } = await got(
+        `https://registry.npmjs.org/${package.replace(/\//, "%2f")}`,
+        {
+          headers: {
+            "if-none-match": `"${etag}"`,
+          },
+          responseType: "json",
+        }
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (Date.now() > endtime) {
+        core.setFailed(`Timeout (${timeout}s)`);
+      }
+
+      process.stdout.write(".");
+      hasVersion = version in body.versions;
+      etag = headers.etag;
+    } while (!hasVersion);
+
+    core.info(` ${version} found for ${package} in npm registry`);
+  } catch (error) {
+    core.debug(inspect(error, { depth: Infinity }));
+    core.setFailed(error.message);
+  }
+}
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;

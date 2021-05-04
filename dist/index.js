@@ -8277,7 +8277,7 @@ async function main() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (Date.now() > endtime) {
-        core.setFailed(`Timeout (${timeout}s)`);
+        core.error(`Timeout (${timeout}s)`);
       }
 
       process.stdout.write(".");

@@ -26,12 +26,13 @@ jobs:
           package: example
           version: ${{ github.event.release.tag_name }} # v1.2.3 is automatically parsed as "1.2.3"
           timeout: 300 # time in seconds, defaults to 5 minutes
+          registry: https://npm.pkg.github.com # defaults to https://registry.npmjs.org
       # it is now save to assume that `npm install example@latest` will return the new version
 ```
 
 ## How it works
 
-The action continuously sends a request to `https://registry.npmjs.org/[package]` and checks if the JSON response's `versions` object has a key for the configured version.
+The action continuously sends a request to `https://registry.npmjs.org/[package]` (or another `registry` if specified as parameter) and checks if the JSON response's `versions` object has a key for the configured version.
 
 If the looked for version is not available after 300 seconds (configurable with `timeout`), the action ends with an error.
 

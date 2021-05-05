@@ -1,8 +1,8 @@
-on: 
+on:
   push:
     branches: main
   pull_request_target:
-    types: 
+    types:
       - synchronize
       - opened
 name: Test
@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
       - run: npm ci
       - run: npm test
   publishTest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
       - run: npm ci
       - run: npm run build
       - run: npm set //registry.npmjs.org/:_authToken $NPM_TOKEN

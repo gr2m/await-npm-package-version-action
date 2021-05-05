@@ -18,8 +18,8 @@ async function main() {
   try {
     const package = core.getInput("package");
     const version = core.getInput("version").replace(/^v/, "");
-    const timeout = core.getInput("timeout") | TIMEOUT_DEFAULT;
-    const registry = core.getInput("registry") | "https://registry.npmjs.org";
+    const timeout = core.getInput("timeout") || TIMEOUT_DEFAULT;
+    const registry = core.getInput("registry") || "https://registry.npmjs.org";
     const endtime = Date.now() + timeout * 1000;
 
     core.info(`waiting for ${version} of ${package} `);

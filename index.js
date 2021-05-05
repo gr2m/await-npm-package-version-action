@@ -7,10 +7,10 @@ const TIMEOUT_DEFAULT = 300;
 
 main();
 
-const getRegistryURL = (registry, package) => {
+function getRegistryURL(registry, package) {
   const sanitizedPackageName = package.replace(/\//, "%2f");
   const registryURL = new URL(sanitizedPackageName, registry);
-  
+
   return registryURL.toString();
 }
 
@@ -19,7 +19,7 @@ async function main() {
     const package = core.getInput("package");
     const version = core.getInput("version").replace(/^v/, "");
     const timeout = core.getInput("timeout") | TIMEOUT_DEFAULT;
-    const registry = core.getInput("registry") | "https://registry.npmjs.org"
+    const registry = core.getInput("registry") | "https://registry.npmjs.org";
     const endtime = Date.now() + timeout * 1000;
 
     core.info(`waiting for ${version} of ${package} `);
@@ -27,15 +27,12 @@ async function main() {
     let hasVersion;
     let etag;
     do {
-      const { body, headers } = await got(
-        getRegistryURL(registry, package),
-        {
-          headers: {
-            "if-none-match": `"${etag}"`,
-          },
-          responseType: "json",
-        }
-      );
+      const { body, headers } = await got(getRegistryURL(registry, package), {
+        headers: {
+          "if-none-match": `"${etag}"`,
+        },
+        responseType: "json",
+      });
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 

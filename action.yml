@@ -13,6 +13,9 @@ inputs:
   timeout:
     description: "Timeout in seconds"
     required: false
+  registry:
+    description: "NPM registry to use"
+    required: false
 runs:
   using: "node12"
   main: "dist/index.js"

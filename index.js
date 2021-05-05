@@ -7,14 +7,14 @@ const TIMEOUT_DEFAULT = 300;
 
 main();
 
-function getRegistryURL(registry, package) {
-  const sanitizedPackageName = package.replace(/\//, "%2f");
-  const registryURL = new URL(sanitizedPackageName, registry);
-
-  return registryURL.toString();
-}
-
 async function main() {
+  function getRegistryURL(registry, package) {
+    const sanitizedPackageName = package.replace(/\//, "%2f");
+    const registryURL = new URL(sanitizedPackageName, registry);
+
+    return registryURL.toString();
+  }
+
   try {
     const package = core.getInput("package");
     const version = core.getInput("version").replace(/^v/, "");

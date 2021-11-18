@@ -27,7 +27,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issue = exports.issueCommand = void 0;
-const os = __importStar(__nccwpck_require__(2087));
+const os = __importStar(__nccwpck_require__(2037));
 const utils_1 = __nccwpck_require__(5278);
 /**
  * Commands
@@ -138,8 +138,8 @@ exports.getIDToken = exports.getState = exports.saveState = exports.group = expo
 const command_1 = __nccwpck_require__(7351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(5278);
-const os = __importStar(__nccwpck_require__(2087));
-const path = __importStar(__nccwpck_require__(5622));
+const os = __importStar(__nccwpck_require__(2037));
+const path = __importStar(__nccwpck_require__(1017));
 const oidc_utils_1 = __nccwpck_require__(8041);
 /**
  * The code to exit an action
@@ -448,8 +448,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issueCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(__nccwpck_require__(5747));
-const os = __importStar(__nccwpck_require__(2087));
+const fs = __importStar(__nccwpck_require__(7147));
+const os = __importStar(__nccwpck_require__(2037));
 const utils_1 = __nccwpck_require__(5278);
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
@@ -671,8 +671,8 @@ exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHand
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const http = __nccwpck_require__(8605);
-const https = __nccwpck_require__(7211);
+const http = __nccwpck_require__(3685);
+const https = __nccwpck_require__(5687);
 const pm = __nccwpck_require__(6443);
 let tunnel;
 var HttpCodes;
@@ -1323,6 +1323,8 @@ const objectTypeNames = [
     'DataView',
     'Promise',
     'URL',
+    'FormData',
+    'URLSearchParams',
     'HTMLElement',
     ...typedArrayTypeNames
 ];
@@ -1549,6 +1551,10 @@ is.emptySet = (value) => is.set(value) && value.size === 0;
 is.nonEmptySet = (value) => is.set(value) && value.size > 0;
 is.emptyMap = (value) => is.map(value) && value.size === 0;
 is.nonEmptyMap = (value) => is.map(value) && value.size > 0;
+// `PropertyKey` is any value that can be used as an object key (string, number, or symbol)
+is.propertyKey = (value) => is.any([is.string, is.number, is.symbol], value);
+is.formData = (value) => isObjectOfType('FormData')(value);
+is.urlSearchParams = (value) => isObjectOfType('URLSearchParams')(value);
 const predicateOnArray = (method, predicate, values) => {
     if (!is.function_(predicate)) {
         throw new TypeError(`Invalid predicate: ${JSON.stringify(predicate)}`);
@@ -1656,6 +1662,9 @@ exports.assert = {
     nonEmptySet: (value) => assertType(is.nonEmptySet(value), "non-empty set" /* nonEmptySet */, value),
     emptyMap: (value) => assertType(is.emptyMap(value), "empty map" /* emptyMap */, value),
     nonEmptyMap: (value) => assertType(is.nonEmptyMap(value), "non-empty map" /* nonEmptyMap */, value),
+    propertyKey: (value) => assertType(is.propertyKey(value), 'PropertyKey', value),
+    formData: (value) => assertType(is.formData(value), 'FormData', value),
+    urlSearchParams: (value) => assertType(is.urlSearchParams(value), 'URLSearchParams', value),
     // Numbers.
     evenInteger: (value) => assertType(is.evenInteger(value), "even integer" /* evenInteger */, value),
     oddInteger: (value) => assertType(is.oddInteger(value), "odd integer" /* oddInteger */, value),
@@ -1692,10 +1701,10 @@ Object.defineProperties(exports.assert, {
         value: exports.assert.null_
     }
 });
-exports.default = is;
+exports["default"] = is;
 // For CommonJS default export support
 module.exports = is;
-module.exports.default = is;
+module.exports["default"] = is;
 module.exports.assert = exports.assert;
 
 
@@ -1708,8 +1717,12 @@ module.exports.assert = exports.assert;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const defer_to_connect_1 = __nccwpck_require__(6214);
+const util_1 = __nccwpck_require__(3837);
 const nodejsMajorVersion = Number(process.versions.node.split('.')[0]);
 const timer = (request) => {
+    if (request.timings) {
+        return request.timings;
+    }
     const timings = {
         start: Date.now(),
         socket: undefined,
@@ -1747,17 +1760,21 @@ const timer = (request) => {
         };
     };
     handleError(request);
-    request.prependOnceListener('abort', () => {
+    const onAbort = () => {
         timings.abort = Date.now();
         // Let the `end` response event be responsible for setting the total phase,
         // unless the Node.js major version is >= 13.
         if (!timings.response || nodejsMajorVersion >= 13) {
             timings.phases.total = Date.now() - timings.start;
         }
-    });
+    };
+    request.prependOnceListener('abort', onAbort);
     const onSocket = (socket) => {
         timings.socket = Date.now();
         timings.phases.wait = timings.socket - timings.start;
+        if (util_1.types.isProxy(socket)) {
+            return;
+        }
         const lookupListener = () => {
             timings.lookup = Date.now();
             timings.phases.dns = timings.lookup - timings.socket;
@@ -1790,7 +1807,7 @@ const timer = (request) => {
     const onUpload = () => {
         var _a;
         timings.upload = Date.now();
-        timings.phases.request = timings.upload - (_a = timings.secureConnect, (_a !== null && _a !== void 0 ? _a : timings.connect));
+        timings.phases.request = timings.upload - ((_a = timings.secureConnect) !== null && _a !== void 0 ? _a : timings.connect);
     };
     const writableFinished = () => {
         if (typeof request.writableFinished === 'boolean') {
@@ -1815,13 +1832,14 @@ const timer = (request) => {
             timings.phases.download = timings.end - timings.response;
             timings.phases.total = timings.end - timings.start;
         });
+        response.prependOnceListener('aborted', onAbort);
     });
     return timings;
 };
-exports.default = timer;
+exports["default"] = timer;
 // For CommonJS default export support
 module.exports = timer;
-module.exports.default = timer;
+module.exports["default"] = timer;
 
 
 /***/ }),
@@ -1839,9 +1857,9 @@ const {
 		Resolver: AsyncResolver
 	},
 	lookup: dnsLookup
-} = __nccwpck_require__(881);
-const {promisify} = __nccwpck_require__(1669);
-const os = __nccwpck_require__(2087);
+} = __nccwpck_require__(9523);
+const {promisify} = __nccwpck_require__(3837);
+const os = __nccwpck_require__(2037);
 
 const kCacheableLookupCreateConnection = Symbol('cacheableLookupCreateConnection');
 const kCacheableLookupInstance = Symbol('cacheableLookupInstance');
@@ -2265,7 +2283,7 @@ class CacheableLookup {
 }
 
 module.exports = CacheableLookup;
-module.exports.default = CacheableLookup;
+module.exports["default"] = CacheableLookup;
 
 
 /***/ }),
@@ -2276,8 +2294,8 @@ module.exports.default = CacheableLookup;
 "use strict";
 
 
-const EventEmitter = __nccwpck_require__(8614);
-const urlLib = __nccwpck_require__(8835);
+const EventEmitter = __nccwpck_require__(2361);
+const urlLib = __nccwpck_require__(7310);
 const normalizeUrl = __nccwpck_require__(7952);
 const getStream = __nccwpck_require__(1766);
 const CachePolicy = __nccwpck_require__(1002);
@@ -2535,7 +2553,7 @@ module.exports = CacheableRequest;
 "use strict";
 
 
-const PassThrough = __nccwpck_require__(2413).PassThrough;
+const PassThrough = (__nccwpck_require__(2781).PassThrough);
 const mimicResponse = __nccwpck_require__(2610);
 
 const cloneResponse = response => {
@@ -2559,8 +2577,8 @@ module.exports = cloneResponse;
 
 "use strict";
 
-const {Transform, PassThrough} = __nccwpck_require__(2413);
-const zlib = __nccwpck_require__(8761);
+const {Transform, PassThrough} = __nccwpck_require__(2781);
+const zlib = __nccwpck_require__(9796);
 const mimicResponse = __nccwpck_require__(3877);
 
 module.exports = response => {
@@ -2752,10 +2770,10 @@ const deferToConnect = (socket, fn) => {
         listeners.close(socket._hadError);
     }
 };
-exports.default = deferToConnect;
+exports["default"] = deferToConnect;
 // For CommonJS default export support
 module.exports = deferToConnect;
-module.exports.default = deferToConnect;
+module.exports["default"] = deferToConnect;
 
 
 /***/ }),
@@ -2866,7 +2884,7 @@ module.exports = eos;
 
 "use strict";
 
-const {PassThrough: PassThroughStream} = __nccwpck_require__(2413);
+const {PassThrough: PassThroughStream} = __nccwpck_require__(2781);
 
 module.exports = options => {
 	options = {...options};
@@ -2926,7 +2944,7 @@ module.exports = options => {
 
 "use strict";
 
-const {constants: BufferConstants} = __nccwpck_require__(4293);
+const {constants: BufferConstants} = __nccwpck_require__(4300);
 const pump = __nccwpck_require__(8341);
 const bufferStream = __nccwpck_require__(1585);
 
@@ -2981,7 +2999,7 @@ async function getStream(inputStream, options) {
 
 module.exports = getStream;
 // TODO: Remove this for the next major release
-module.exports.default = getStream;
+module.exports["default"] = getStream;
 module.exports.buffer = (stream, options) => getStream(stream, {...options, encoding: 'buffer'});
 module.exports.array = (stream, options) => getStream(stream, {...options, array: true});
 module.exports.MaxBufferError = MaxBufferError;
@@ -3022,7 +3040,7 @@ function createRejection(error, ...beforeErrorGroups) {
     promise.on = returnPromise;
     return promise;
 }
-exports.default = createRejection;
+exports["default"] = createRejection;
 
 
 /***/ }),
@@ -3043,7 +3061,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const events_1 = __nccwpck_require__(8614);
+const events_1 = __nccwpck_require__(2361);
 const is_1 = __nccwpck_require__(7678);
 const PCancelable = __nccwpck_require__(9072);
 const types_1 = __nccwpck_require__(4597);
@@ -3204,7 +3222,7 @@ function asPromise(normalizedOptions) {
     promise.text = () => shortcut('text');
     return promise;
 }
-exports.default = asPromise;
+exports["default"] = asPromise;
 __exportStar(__nccwpck_require__(4597), exports);
 
 
@@ -3291,7 +3309,7 @@ const normalizeArguments = (options, defaults) => {
     }
     return options;
 };
-exports.default = normalizeArguments;
+exports["default"] = normalizeArguments;
 
 
 /***/ }),
@@ -3324,7 +3342,7 @@ const parseBody = (response, responseType, parseJson, encoding) => {
         throw new types_1.ParseError(error, response);
     }
 };
-exports.default = parseBody;
+exports["default"] = parseBody;
 
 
 /***/ }),
@@ -3356,6 +3374,7 @@ class ParseError extends core_1.RequestError {
         const { options } = response.request;
         super(`${error.message} in "${options.url.toString()}"`, error, response.request);
         this.name = 'ParseError';
+        this.code = this.code === 'ERR_GOT_REQUEST_ERROR' ? 'ERR_BODY_PARSE_FAILURE' : this.code;
     }
 }
 exports.ParseError = ParseError;
@@ -3366,6 +3385,7 @@ class CancelError extends core_1.RequestError {
     constructor(request) {
         super('Promise was canceled', {}, request);
         this.name = 'CancelError';
+        this.code = 'ERR_CANCELED';
     }
     get isCanceled() {
         return true;
@@ -3409,7 +3429,7 @@ const calculateRetryDelay = ({ attemptCount, retryOptions, error, retryAfter }) 
     const noise = Math.random() * 100;
     return ((2 ** (attemptCount - 1)) * 1000) + noise;
 };
-exports.default = calculateRetryDelay;
+exports["default"] = calculateRetryDelay;
 
 
 /***/ }),
@@ -3421,13 +3441,13 @@ exports.default = calculateRetryDelay;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UnsupportedProtocolError = exports.ReadError = exports.TimeoutError = exports.UploadError = exports.CacheError = exports.HTTPError = exports.MaxRedirectsError = exports.RequestError = exports.setNonEnumerableProperties = exports.knownHookEvents = exports.withoutBody = exports.kIsNormalizedAlready = void 0;
-const util_1 = __nccwpck_require__(1669);
-const stream_1 = __nccwpck_require__(2413);
-const fs_1 = __nccwpck_require__(5747);
-const url_1 = __nccwpck_require__(8835);
-const http = __nccwpck_require__(8605);
-const http_1 = __nccwpck_require__(8605);
-const https = __nccwpck_require__(7211);
+const util_1 = __nccwpck_require__(3837);
+const stream_1 = __nccwpck_require__(2781);
+const fs_1 = __nccwpck_require__(7147);
+const url_1 = __nccwpck_require__(7310);
+const http = __nccwpck_require__(3685);
+const http_1 = __nccwpck_require__(3685);
+const https = __nccwpck_require__(5687);
 const http_timer_1 = __nccwpck_require__(8097);
 const cacheable_lookup_1 = __nccwpck_require__(2286);
 const CacheableRequest = __nccwpck_require__(8116);
@@ -3541,11 +3561,11 @@ Contains a `code` property with error class code, like `ECONNREFUSED`.
 */
 class RequestError extends Error {
     constructor(message, error, self) {
-        var _a;
+        var _a, _b;
         super(message);
         Error.captureStackTrace(this, this.constructor);
         this.name = 'RequestError';
-        this.code = error.code;
+        this.code = (_a = error.code) !== null && _a !== void 0 ? _a : 'ERR_GOT_REQUEST_ERROR';
         if (self instanceof Request) {
             Object.defineProperty(this, 'request', {
                 enumerable: false,
@@ -3570,7 +3590,7 @@ class RequestError extends Error {
                 value: self
             });
         }
-        this.timings = (_a = this.request) === null || _a === void 0 ? void 0 : _a.timings;
+        this.timings = (_b = this.request) === null || _b === void 0 ? void 0 : _b.timings;
         // Recover the original stacktrace
         if (is_1.default.string(error.stack) && is_1.default.string(this.stack)) {
             const indexOfMessage = this.stack.indexOf(this.message) + this.message.length;
@@ -3593,6 +3613,7 @@ class MaxRedirectsError extends RequestError {
     constructor(request) {
         super(`Redirected ${request.options.maxRedirects} times. Aborting.`, {}, request);
         this.name = 'MaxRedirectsError';
+        this.code = 'ERR_TOO_MANY_REDIRECTS';
     }
 }
 exports.MaxRedirectsError = MaxRedirectsError;
@@ -3604,6 +3625,7 @@ class HTTPError extends RequestError {
     constructor(response) {
         super(`Response code ${response.statusCode} (${response.statusMessage})`, {}, response.request);
         this.name = 'HTTPError';
+        this.code = 'ERR_NON_2XX_3XX_RESPONSE';
     }
 }
 exports.HTTPError = HTTPError;
@@ -3615,6 +3637,7 @@ class CacheError extends RequestError {
     constructor(error, request) {
         super(error.message, error, request);
         this.name = 'CacheError';
+        this.code = this.code === 'ERR_GOT_REQUEST_ERROR' ? 'ERR_CACHE_ACCESS' : this.code;
     }
 }
 exports.CacheError = CacheError;
@@ -3625,6 +3648,7 @@ class UploadError extends RequestError {
     constructor(error, request) {
         super(error.message, error, request);
         this.name = 'UploadError';
+        this.code = this.code === 'ERR_GOT_REQUEST_ERROR' ? 'ERR_UPLOAD' : this.code;
     }
 }
 exports.UploadError = UploadError;
@@ -3648,6 +3672,7 @@ class ReadError extends RequestError {
     constructor(error, request) {
         super(error.message, error, request);
         this.name = 'ReadError';
+        this.code = this.code === 'ERR_GOT_REQUEST_ERROR' ? 'ERR_READING_RESPONSE_STREAM' : this.code;
     }
 }
 exports.ReadError = ReadError;
@@ -3658,6 +3683,7 @@ class UnsupportedProtocolError extends RequestError {
     constructor(options) {
         super(`Unsupported protocol "${options.url.protocol}"`, {}, options);
         this.name = 'UnsupportedProtocolError';
+        this.code = 'ERR_UNSUPPORTED_PROTOCOL';
     }
 }
 exports.UnsupportedProtocolError = UnsupportedProtocolError;
@@ -4908,7 +4934,7 @@ class Request extends stream_1.Duplex {
         return this;
     }
 }
-exports.default = Request;
+exports["default"] = Request;
 
 
 /***/ }),
@@ -4944,12 +4970,12 @@ exports.dnsLookupIpVersionToFamily = (dnsLookupIpVersion) => {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const fs_1 = __nccwpck_require__(5747);
-const util_1 = __nccwpck_require__(1669);
+const fs_1 = __nccwpck_require__(7147);
+const util_1 = __nccwpck_require__(3837);
 const is_1 = __nccwpck_require__(7678);
 const is_form_data_1 = __nccwpck_require__(40);
 const statAsync = util_1.promisify(fs_1.stat);
-exports.default = async (body, headers) => {
+exports["default"] = async (body, headers) => {
     if (headers && 'content-length' in headers) {
         return Number(headers['content-length']);
     }
@@ -4997,7 +5023,7 @@ const getBuffer = async (stream) => {
     }
     return Buffer.from(chunks.join(''));
 };
-exports.default = getBuffer;
+exports["default"] = getBuffer;
 
 
 /***/ }),
@@ -5009,7 +5035,7 @@ exports.default = getBuffer;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const is_1 = __nccwpck_require__(7678);
-exports.default = (body) => is_1.default.nodeStream(body) && is_1.default.function_(body.getBoundary);
+exports["default"] = (body) => is_1.default.nodeStream(body) && is_1.default.function_(body.getBoundary);
 
 
 /***/ }),
@@ -5037,7 +5063,7 @@ exports.isResponseOk = (response) => {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 /* istanbul ignore file: deprecated */
-const url_1 = __nccwpck_require__(8835);
+const url_1 = __nccwpck_require__(7310);
 const keys = [
     'protocol',
     'host',
@@ -5046,7 +5072,7 @@ const keys = [
     'pathname',
     'search'
 ];
-exports.default = (origin, options) => {
+exports["default"] = (origin, options) => {
     var _a, _b;
     if (options.path) {
         if (options.pathname) {
@@ -5111,7 +5137,7 @@ function default_1(from, to, events) {
         }
     };
 }
-exports.default = default_1;
+exports["default"] = default_1;
 
 
 /***/ }),
@@ -5123,7 +5149,7 @@ exports.default = default_1;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TimeoutError = void 0;
-const net = __nccwpck_require__(1631);
+const net = __nccwpck_require__(1808);
 const unhandle_1 = __nccwpck_require__(1593);
 const reentry = Symbol('reentry');
 const noop = () => { };
@@ -5136,7 +5162,7 @@ class TimeoutError extends Error {
     }
 }
 exports.TimeoutError = TimeoutError;
-exports.default = (request, delays, options) => {
+exports["default"] = (request, delays, options) => {
     if (reentry in request) {
         return noop;
     }
@@ -5255,7 +5281,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 // Especially if you do error handling and set timeouts.
 // So instead of checking if it's proper to throw an error on every timeout ever,
 // use this simple tool which will remove all listeners you have attached.
-exports.default = () => {
+exports["default"] = () => {
     const handlers = [];
     return {
         once(origin, event, fn) {
@@ -5282,7 +5308,7 @@ exports.default = () => {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const is_1 = __nccwpck_require__(7678);
-exports.default = (url) => {
+exports["default"] = (url) => {
     // Cast to URL
     url = url;
     const options = {
@@ -5339,7 +5365,7 @@ class WeakableMap {
         return this.map.has(key);
     }
 }
-exports.default = WeakableMap;
+exports["default"] = WeakableMap;
 
 
 /***/ }),
@@ -5586,7 +5612,7 @@ const create = (defaults) => {
     got.mergeOptions = mergeOptions;
     return got;
 };
-exports.default = create;
+exports["default"] = create;
 __exportStar(__nccwpck_require__(2613), exports);
 
 
@@ -5608,7 +5634,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const url_1 = __nccwpck_require__(8835);
+const url_1 = __nccwpck_require__(7310);
 const create_1 = __nccwpck_require__(4337);
 const defaults = {
     options: {
@@ -5721,10 +5747,10 @@ const defaults = {
     mutableDefaults: false
 };
 const got = create_1.default(defaults);
-exports.default = got;
+exports["default"] = got;
 // For CommonJS default export support
 module.exports = got;
-module.exports.default = got;
+module.exports["default"] = got;
 module.exports.__esModule = true; // Workaround for TS issue: https://github.com/sindresorhus/got/pull/1267
 __exportStar(__nccwpck_require__(4337), exports);
 __exportStar(__nccwpck_require__(6056), exports);
@@ -5757,7 +5783,7 @@ function deepFreeze(object) {
     }
     return Object.freeze(object);
 }
-exports.default = deepFreeze;
+exports["default"] = deepFreeze;
 
 
 /***/ }),
@@ -5769,7 +5795,7 @@ exports.default = deepFreeze;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const alreadyWarned = new Set();
-exports.default = (message) => {
+exports["default"] = (message) => {
     if (alreadyWarned.has(message)) {
         return;
     }
@@ -6469,9 +6495,9 @@ module.exports = class CachePolicy {
 
 "use strict";
 
-const EventEmitter = __nccwpck_require__(8614);
-const tls = __nccwpck_require__(4016);
-const http2 = __nccwpck_require__(7565);
+const EventEmitter = __nccwpck_require__(2361);
+const tls = __nccwpck_require__(4404);
+const http2 = __nccwpck_require__(5158);
 const QuickLRU = __nccwpck_require__(9273);
 
 const kCurrentStreamsCount = Symbol('currentStreamsCount');
@@ -7147,8 +7173,8 @@ module.exports = {
 
 "use strict";
 
-const http = __nccwpck_require__(8605);
-const https = __nccwpck_require__(7211);
+const http = __nccwpck_require__(3685);
+const https = __nccwpck_require__(5687);
 const resolveALPN = __nccwpck_require__(6624);
 const QuickLRU = __nccwpck_require__(9273);
 const Http2ClientRequest = __nccwpck_require__(9632);
@@ -7304,8 +7330,8 @@ module.exports.protocolCache = cache;
 
 "use strict";
 
-const http2 = __nccwpck_require__(7565);
-const {Writable} = __nccwpck_require__(2413);
+const http2 = __nccwpck_require__(5158);
+const {Writable} = __nccwpck_require__(2781);
 const {Agent, globalAgent} = __nccwpck_require__(9898);
 const IncomingMessage = __nccwpck_require__(2575);
 const urlToOptions = __nccwpck_require__(2686);
@@ -7757,7 +7783,7 @@ module.exports = ClientRequest;
 
 "use strict";
 
-const {Readable} = __nccwpck_require__(2413);
+const {Readable} = __nccwpck_require__(2781);
 
 class IncomingMessage extends Readable {
 	constructor(socket, highWaterMark) {
@@ -7823,7 +7849,7 @@ module.exports = IncomingMessage;
 
 "use strict";
 
-const http2 = __nccwpck_require__(7565);
+const http2 = __nccwpck_require__(5158);
 const agent = __nccwpck_require__(9898);
 const ClientRequest = __nccwpck_require__(9632);
 const IncomingMessage = __nccwpck_require__(2575);
@@ -7859,7 +7885,7 @@ module.exports = {
 
 "use strict";
 
-const net = __nccwpck_require__(1631);
+const net = __nccwpck_require__(1808);
 /* istanbul ignore file: https://github.com/nodejs/node/blob/v13.0.1/lib/_http_agent.js */
 
 module.exports = options => {
@@ -8082,10 +8108,10 @@ exports.parse = function (s) {
 "use strict";
 
 
-const EventEmitter = __nccwpck_require__(8614);
+const EventEmitter = __nccwpck_require__(2361);
 const JSONB = __nccwpck_require__(2820);
 
-const loadStore = opts => {
+const loadStore = options => {
 	const adapters = {
 		redis: '@keyv/redis',
 		mongodb: '@keyv/mongo',
@@ -8093,36 +8119,36 @@ const loadStore = opts => {
 		sqlite: '@keyv/sqlite',
 		postgresql: '@keyv/postgres',
 		postgres: '@keyv/postgres',
-		mysql: '@keyv/mysql'
+		mysql: '@keyv/mysql',
 	};
-	if (opts.adapter || opts.uri) {
-		const adapter = opts.adapter || /^[^:]*/.exec(opts.uri)[0];
-		return new (require(adapters[adapter]))(opts);
+	if (options.adapter || options.uri) {
+		const adapter = options.adapter || /^[^:]*/.exec(options.uri)[0];
+		return new (require(adapters[adapter]))(options);
 	}
 
 	return new Map();
 };
 
 class Keyv extends EventEmitter {
-	constructor(uri, opts) {
+	constructor(uri, options) {
 		super();
 		this.opts = Object.assign(
 			{
 				namespace: 'keyv',
 				serialize: JSONB.stringify,
-				deserialize: JSONB.parse
+				deserialize: JSONB.parse,
 			},
 			(typeof uri === 'string') ? { uri } : uri,
-			opts
+			options,
 		);
 
 		if (!this.opts.store) {
-			const adapterOpts = Object.assign({}, this.opts);
-			this.opts.store = loadStore(adapterOpts);
+			const adapterOptions = Object.assign({}, this.opts);
+			this.opts.store = loadStore(adapterOptions);
 		}
 
 		if (typeof this.opts.store.on === 'function') {
-			this.opts.store.on('error', err => this.emit('error', err));
+			this.opts.store.on('error', error => this.emit('error', error));
 		}
 
 		this.opts.store.namespace = this.opts.namespace;
@@ -8132,14 +8158,12 @@ class Keyv extends EventEmitter {
 		return `${this.opts.namespace}:${key}`;
 	}
 
-	get(key, opts) {
+	get(key, options) {
 		const keyPrefixed = this._getKeyPrefix(key);
 		const { store } = this.opts;
 		return Promise.resolve()
 			.then(() => store.get(keyPrefixed))
-			.then(data => {
-				return (typeof data === 'string') ? this.opts.deserialize(data) : data;
-			})
+			.then(data => (typeof data === 'string') ? this.opts.deserialize(data) : data)
 			.then(data => {
 				if (data === undefined) {
 					return undefined;
@@ -8150,7 +8174,7 @@ class Keyv extends EventEmitter {
 					return undefined;
 				}
 
-				return (opts && opts.raw) ? data : data.value;
+				return (options && options.raw) ? data : data.value;
 			});
 	}
 
@@ -8254,12 +8278,10 @@ module.exports = (fromStream, toStream) => {
 /***/ }),
 
 /***/ 7952:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((module) => {
 
 "use strict";
 
-// TODO: Use the `URL` global when targeting Node.js 10
-const URLParser = typeof URL === 'undefined' ? __nccwpck_require__(8835).URL : URL;
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
 const DATA_URL_DEFAULT_MIME_TYPE = 'text/plain';
@@ -8270,21 +8292,20 @@ const testParameter = (name, filters) => {
 };
 
 const normalizeDataURL = (urlString, {stripHash}) => {
-	const parts = urlString.match(/^data:(.*?),(.*?)(?:#(.*))?$/);
+	const match = /^data:(?<type>[^,]*?),(?<data>[^#]*?)(?:#(?<hash>.*))?$/.exec(urlString);
 
-	if (!parts) {
+	if (!match) {
 		throw new Error(`Invalid URL: ${urlString}`);
 	}
 
-	const mediaType = parts[1].split(';');
-	const body = parts[2];
-	const hash = stripHash ? '' : parts[3];
+	let {type, data, hash} = match.groups;
+	const mediaType = type.split(';');
+	hash = stripHash ? '' : hash;
 
-	let base64 = false;
-
+	let isBase64 = false;
 	if (mediaType[mediaType.length - 1] === 'base64') {
 		mediaType.pop();
-		base64 = true;
+		isBase64 = true;
 	}
 
 	// Lowercase MIME type
@@ -8310,7 +8331,7 @@ const normalizeDataURL = (urlString, {stripHash}) => {
 		...attributes
 	];
 
-	if (base64) {
+	if (isBase64) {
 		normalizedMediaType.push('base64');
 	}
 
@@ -8318,7 +8339,7 @@ const normalizeDataURL = (urlString, {stripHash}) => {
 		normalizedMediaType.unshift(mimeType);
 	}
 
-	return `data:${normalizedMediaType.join(';')},${base64 ? body.trim() : body}${hash ? `#${hash}` : ''}`;
+	return `data:${normalizedMediaType.join(';')},${isBase64 ? data.trim() : data}${hash ? `#${hash}` : ''}`;
 };
 
 const normalizeUrl = (urlString, options) => {
@@ -8329,32 +8350,25 @@ const normalizeUrl = (urlString, options) => {
 		forceHttps: false,
 		stripAuthentication: true,
 		stripHash: false,
+		stripTextFragment: true,
 		stripWWW: true,
 		removeQueryParameters: [/^utm_\w+/i],
 		removeTrailingSlash: true,
+		removeSingleSlash: true,
 		removeDirectoryIndex: false,
 		sortQueryParameters: true,
 		...options
 	};
-
-	// TODO: Remove this at some point in the future
-	if (Reflect.has(options, 'normalizeHttps')) {
-		throw new Error('options.normalizeHttps is renamed to options.forceHttp');
-	}
-
-	if (Reflect.has(options, 'normalizeHttp')) {
-		throw new Error('options.normalizeHttp is renamed to options.forceHttps');
-	}
-
-	if (Reflect.has(options, 'stripFragment')) {
-		throw new Error('options.stripFragment is renamed to options.stripHash');
-	}
 
 	urlString = urlString.trim();
 
 	// Data URL
 	if (/^data:/i.test(urlString)) {
 		return normalizeDataURL(urlString, options);
+	}
+
+	if (/^view-source:/i.test(urlString)) {
+		throw new Error('`view-source:` is not supported as it is a non-standard protocol');
 	}
 
 	const hasRelativeProtocol = urlString.startsWith('//');
@@ -8365,7 +8379,7 @@ const normalizeUrl = (urlString, options) => {
 		urlString = urlString.replace(/^(?!(?:\w+:)?\/\/)|^\/\//, options.defaultProtocol);
 	}
 
-	const urlObj = new URLParser(urlString);
+	const urlObj = new URL(urlString);
 
 	if (options.forceHttp && options.forceHttps) {
 		throw new Error('The `forceHttp` and `forceHttps` options cannot be used together');
@@ -8388,24 +8402,20 @@ const normalizeUrl = (urlString, options) => {
 	// Remove hash
 	if (options.stripHash) {
 		urlObj.hash = '';
+	} else if (options.stripTextFragment) {
+		urlObj.hash = urlObj.hash.replace(/#?:~:text.*?$/i, '');
 	}
 
 	// Remove duplicate slashes if not preceded by a protocol
 	if (urlObj.pathname) {
-		// TODO: Use the following instead when targeting Node.js 10
-		// `urlObj.pathname = urlObj.pathname.replace(/(?<!https?:)\/{2,}/g, '/');`
-		urlObj.pathname = urlObj.pathname.replace(/((?!:).|^)\/{2,}/g, (_, p1) => {
-			if (/^(?!\/)/g.test(p1)) {
-				return `${p1}/`;
-			}
-
-			return '/';
-		});
+		urlObj.pathname = urlObj.pathname.replace(/(?<!\b(?:[a-z][a-z\d+\-.]{1,50}:))\/{2,}/g, '/');
 	}
 
 	// Decode URI octets
 	if (urlObj.pathname) {
-		urlObj.pathname = decodeURI(urlObj.pathname);
+		try {
+			urlObj.pathname = decodeURI(urlObj.pathname);
+		} catch (_) {}
 	}
 
 	// Remove directory index
@@ -8428,10 +8438,11 @@ const normalizeUrl = (urlString, options) => {
 		urlObj.hostname = urlObj.hostname.replace(/\.$/, '');
 
 		// Remove `www.`
-		if (options.stripWWW && /^www\.([a-z\-\d]{2,63})\.([a-z.]{2,5})$/.test(urlObj.hostname)) {
-			// Each label should be max 63 at length (min: 2).
-			// The extension should be max 5 at length (min: 2).
+		if (options.stripWWW && /^www\.(?!www\.)(?:[a-z\-\d]{1,63})\.(?:[a-z.\-\d]{2,63})$/.test(urlObj.hostname)) {
+			// Each label should be max 63 at length (min: 1).
 			// Source: https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
+			// Each TLD should be up to 63 characters long (min: 2).
+			// It is technically possible to have a single character TLD, but none currently exist.
 			urlObj.hostname = urlObj.hostname.replace(/^www\./, '');
 		}
 	}
@@ -8445,6 +8456,10 @@ const normalizeUrl = (urlString, options) => {
 		}
 	}
 
+	if (options.removeQueryParameters === true) {
+		urlObj.search = '';
+	}
+
 	// Sort query parameters
 	if (options.sortQueryParameters) {
 		urlObj.searchParams.sort();
@@ -8454,11 +8469,17 @@ const normalizeUrl = (urlString, options) => {
 		urlObj.pathname = urlObj.pathname.replace(/\/$/, '');
 	}
 
+	const oldUrlString = urlString;
+
 	// Take advantage of many of the Node `url` normalizations
 	urlString = urlObj.toString();
 
-	// Remove ending `/`
-	if ((options.removeTrailingSlash || urlObj.pathname === '/') && urlObj.hash === '') {
+	if (!options.removeSingleSlash && urlObj.pathname === '/' && !oldUrlString.endsWith('/') && urlObj.hash === '') {
+		urlString = urlString.replace(/\/$/, '');
+	}
+
+	// Remove ending `/` unless removeSingleSlash is false
+	if ((options.removeTrailingSlash || urlObj.pathname === '/') && urlObj.hash === '' && options.removeSingleSlash) {
 		urlString = urlString.replace(/\/$/, '');
 	}
 
@@ -8476,8 +8497,6 @@ const normalizeUrl = (urlString, options) => {
 };
 
 module.exports = normalizeUrl;
-// TODO: Remove this for the next major release
-module.exports.default = normalizeUrl;
 
 
 /***/ }),
@@ -8655,7 +8674,7 @@ module.exports.CancelError = CancelError;
 
 var once = __nccwpck_require__(1223)
 var eos = __nccwpck_require__(1205)
-var fs = __nccwpck_require__(5747) // we only need fs to get the ReadStream and WriteStream prototypes
+var fs = __nccwpck_require__(7147) // we only need fs to get the ReadStream and WriteStream prototypes
 
 var noop = function () {}
 var ancient = /^v?\.0/.test(process.version)
@@ -8875,12 +8894,16 @@ module.exports = QuickLRU;
 
 "use strict";
 
-const tls = __nccwpck_require__(4016);
+const tls = __nccwpck_require__(4404);
 
-module.exports = (options = {}) => new Promise((resolve, reject) => {
+module.exports = (options = {}, connect = tls.connect) => new Promise((resolve, reject) => {
 	let timeout = false;
 
+	let socket;
+
 	const callback = async () => {
+		await socketPromise;
+
 		socket.off('timeout', onTimeout);
 		socket.off('error', reject);
 
@@ -8902,10 +8925,16 @@ module.exports = (options = {}) => new Promise((resolve, reject) => {
 		callback();
 	};
 
-	const socket = tls.connect(options, callback);
+	const socketPromise = (async () => {
+		try {
+			socket = await connect(options, callback);
 
-	socket.on('error', reject);
-	socket.once('timeout', onTimeout);
+			socket.on('error', reject);
+			socket.once('timeout', onTimeout);
+		} catch (error) {
+			reject(error);
+		}
+	})();
 });
 
 
@@ -8917,7 +8946,7 @@ module.exports = (options = {}) => new Promise((resolve, reject) => {
 "use strict";
 
 
-const Readable = __nccwpck_require__(2413).Readable;
+const Readable = (__nccwpck_require__(2781).Readable);
 const lowercaseKeys = __nccwpck_require__(9662);
 
 class Response extends Readable {
@@ -8967,13 +8996,13 @@ module.exports = __nccwpck_require__(4219);
 "use strict";
 
 
-var net = __nccwpck_require__(1631);
-var tls = __nccwpck_require__(4016);
-var http = __nccwpck_require__(8605);
-var https = __nccwpck_require__(7211);
-var events = __nccwpck_require__(8614);
-var assert = __nccwpck_require__(2357);
-var util = __nccwpck_require__(1669);
+var net = __nccwpck_require__(1808);
+var tls = __nccwpck_require__(4404);
+var http = __nccwpck_require__(3685);
+var https = __nccwpck_require__(5687);
+var events = __nccwpck_require__(2361);
+var assert = __nccwpck_require__(9491);
+var util = __nccwpck_require__(3837);
 
 
 exports.httpOverHttp = httpOverHttp;
@@ -9273,7 +9302,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 2357:
+/***/ 9491:
 /***/ ((module) => {
 
 "use strict";
@@ -9281,7 +9310,7 @@ module.exports = require("assert");
 
 /***/ }),
 
-/***/ 4293:
+/***/ 4300:
 /***/ ((module) => {
 
 "use strict";
@@ -9289,7 +9318,7 @@ module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 881:
+/***/ 9523:
 /***/ ((module) => {
 
 "use strict";
@@ -9297,7 +9326,7 @@ module.exports = require("dns");
 
 /***/ }),
 
-/***/ 8614:
+/***/ 2361:
 /***/ ((module) => {
 
 "use strict";
@@ -9305,7 +9334,7 @@ module.exports = require("events");
 
 /***/ }),
 
-/***/ 5747:
+/***/ 7147:
 /***/ ((module) => {
 
 "use strict";
@@ -9313,7 +9342,7 @@ module.exports = require("fs");
 
 /***/ }),
 
-/***/ 8605:
+/***/ 3685:
 /***/ ((module) => {
 
 "use strict";
@@ -9321,7 +9350,7 @@ module.exports = require("http");
 
 /***/ }),
 
-/***/ 7565:
+/***/ 5158:
 /***/ ((module) => {
 
 "use strict";
@@ -9329,7 +9358,7 @@ module.exports = require("http2");
 
 /***/ }),
 
-/***/ 7211:
+/***/ 5687:
 /***/ ((module) => {
 
 "use strict";
@@ -9337,7 +9366,7 @@ module.exports = require("https");
 
 /***/ }),
 
-/***/ 1631:
+/***/ 1808:
 /***/ ((module) => {
 
 "use strict";
@@ -9345,7 +9374,7 @@ module.exports = require("net");
 
 /***/ }),
 
-/***/ 2087:
+/***/ 2037:
 /***/ ((module) => {
 
 "use strict";
@@ -9353,7 +9382,7 @@ module.exports = require("os");
 
 /***/ }),
 
-/***/ 5622:
+/***/ 1017:
 /***/ ((module) => {
 
 "use strict";
@@ -9361,7 +9390,7 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ 2413:
+/***/ 2781:
 /***/ ((module) => {
 
 "use strict";
@@ -9369,7 +9398,7 @@ module.exports = require("stream");
 
 /***/ }),
 
-/***/ 4016:
+/***/ 4404:
 /***/ ((module) => {
 
 "use strict";
@@ -9377,7 +9406,7 @@ module.exports = require("tls");
 
 /***/ }),
 
-/***/ 8835:
+/***/ 7310:
 /***/ ((module) => {
 
 "use strict";
@@ -9385,7 +9414,7 @@ module.exports = require("url");
 
 /***/ }),
 
-/***/ 1669:
+/***/ 3837:
 /***/ ((module) => {
 
 "use strict";
@@ -9393,7 +9422,7 @@ module.exports = require("util");
 
 /***/ }),
 
-/***/ 8761:
+/***/ 9796:
 /***/ ((module) => {
 
 "use strict";
@@ -9442,7 +9471,7 @@ module.exports = require("zlib");
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-const { inspect } = __nccwpck_require__(1669);
+const { inspect } = __nccwpck_require__(3837);
 
 const core = __nccwpck_require__(2186);
 const got = __nccwpck_require__(3061);

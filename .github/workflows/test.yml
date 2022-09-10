@@ -1,4 +1,4 @@
-on:
+"on":
   push:
     branches: main
   pull_request_target:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
+        with:
+          node-version: lts/*
       - run: npm ci
       - run: npm test
   publishTest:
@@ -19,6 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
+        with:
+          node-version: lts/*
       - run: npm ci
       - run: npm run build
       - run: npm set //registry.npmjs.org/:_authToken $NPM_TOKEN

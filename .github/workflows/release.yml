@@ -13,7 +13,7 @@ jobs:
           token: ${{ secrets.GR2M_PAT }}
       - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version: 16
       - run: npm ci
       - run: npm run build
       - run: rm .gitignore

@@ -23,7 +23,9 @@ jobs:
     steps:
       - uses: gr2m/await-npm-package-version-action@v1
       - with:
-          package: example
+          package: 
+            - example1
+            - example2
           version: ${{ github.event.release.tag_name }} # v1.2.3 is automatically parsed as "1.2.3"
           timeout: 300 # time in seconds, defaults to 5 minutes
           registry: https://npm.pkg.github.com # defaults to https://registry.npmjs.org

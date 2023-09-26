@@ -1,4 +1,4 @@
-.nyc_output
+.tap
 dist
 node_modules
 test/test-package/.npmrc

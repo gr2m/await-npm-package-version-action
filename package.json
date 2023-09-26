@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "build": "ncc build index.js -o dist",
-    "test": "tap --100 test/*/test.js"
+    "test": "tap test/*/test.js",
+    "coverage": "tap report --coverage-report lcov"
   },
   "repository": "github:gr2m/await-npm-package-version-action",
   "keywords": [
@@ -42,6 +43,6 @@
     "@vercel/ncc": "^0.38.0",
     "nock": "^13.3.3",
     "semantic-release": "^22.0.0",
-    "tap": "^18.0.4"
+    "tap": "^18.1.5"
   }
 }

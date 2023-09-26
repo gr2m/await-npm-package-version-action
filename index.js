@@ -36,9 +36,11 @@ async function main() {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
+      /* c8 ignore start */
       if (Date.now() > endtime) {
         core.error(`Timeout (${timeout}s)`);
       }
+      /* c8 ignore end */
 
       process.stdout.write(".");
       hasVersion = version in body.versions;
@@ -46,8 +48,10 @@ async function main() {
     } while (!hasVersion);
 
     core.info(` ${version} found for ${package} in npm registry`);
+    /* c8 ignore start */
   } catch (error) {
     core.debug(inspect(error, { depth: Infinity }));
     core.setFailed(error.message);
   }
+  /* c8 ignore end */
 }

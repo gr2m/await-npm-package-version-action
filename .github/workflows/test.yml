@@ -28,7 +28,7 @@ jobs:
       - run: npm set //registry.npmjs.org/:_authToken $NPM_TOKEN
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN}}
-      - run: npm publish
+      - run: npm publish --tag test
         id: publish
         working-directory: ./test/test-package
       - uses: ./

@@ -4,5 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    ignore: 
+    ignore:
       - dependency-name: "got"
+      - dependency-name: "@actions/core"
+        update-types: ["version-update:semver-major"]
